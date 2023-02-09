@@ -1,0 +1,29 @@
+/* Interface */
+#define function echo(string calldata) nonpayable returns ()
+
+#define event Echo(string)
+
+/* Methods */
+#define macro ECHO() = takes (0) returns (0) {
+    0x04 calldatasize sub  // [str_size]
+    dup1                   // [str_size, str_size]
+    0x04 0x00 calldatacopy // [0x00, 0x04, str_size, str_size]
+    __EVENT_HASH(Echo)     // [echo_hash, str_size] 
+    0x00                   // [0x00, echo_hash, str_size]
+    swap2                  // [str_size, echo_hash, 0x00] 
+    0x00                   // [0x00, data_size, echo_hash, 0x00]
+    log1                   // [0x00]
+    0x00 return            // return
+}
+
+
+#define macro MAIN() = takes (0) returns (0) {
+    // Identify which function is being called.
+    0x00 calldataload 0xE0 shr
+    dup1 __FUNC_SIG(echo) eq echoJump jumpi
+
+    0x00 0x00 revert
+
+    echoJump:
+        ECHO()
+}
